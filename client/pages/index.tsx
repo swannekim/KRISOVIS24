@@ -1,8 +1,16 @@
 import { prependOnceListener } from "process";
 import React from "react";
 import { useEffect, useState } from "react";
+import dynamic from 'next/dynamic';
 
-function index() {
+
+// Dynamically import the components from react-leaflet, disabling SSR
+const MapWithNoSSR = dynamic(() => import('./MapComponent'), {
+  ssr: false
+});
+
+
+function Index() {
 
   // initial value of message (display on web) : loading
   const [message, setMessage] = useState("Loading... Message");
@@ -25,15 +33,13 @@ function index() {
   }, []);
   // useEffect function only runs once due to []
 
-  // display message data
-  // return <div>{message}</div>;
-
   // Display data in a customized way
   return (
     <div>
       <h1>{title}</h1>
-
       <p>{message}</p>
+
+      <MapWithNoSSR />
 
       {ships.map((ship, index) => (
         <p key={index}>{ship}</p>
@@ -42,7 +48,8 @@ function index() {
   );
 }
 
-export default index;
+export default Index;
+
 
 /*
 //_____Comment Out Default_____//

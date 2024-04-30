@@ -7,13 +7,13 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "bundler",  // try "node" if not work
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"] // This points to all files directly under the base URL
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
