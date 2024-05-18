@@ -13,22 +13,23 @@ import numpy as np
 import sys
 import os
 
-
 # Load the pickle file
 with open(sys.argv[1], 'rb') as f:
     data = pickle.load(f)
 
-# Helper function to convert numpy types to Python types
+# Helper function to convert numpy types and Timestamps to Python types
 def convert_types(val):
     if isinstance(val, np.generic):
         return val.item()
+    elif isinstance(val, pd.Timestamp):
+        return val.isoformat()  # Convert Timestamp to ISO 8601 string
     else:
         return val
 
 json_result = []
 for ship in data:
     for df in ship['SEQUENCES']:
-        if not 'port' in df.columns:  # Check if 'port' column is present
+        if 'port' not in df.columns:  # Check if 'port' column is present
             continue  # Skip processing this DataFrame if 'port' is missing
 
         # Assuming TYPE and TON are consistent within each DataFrame
@@ -45,6 +46,11 @@ for ship in data:
                 df['SEQUENCE_ID'] = sequence_id
                 df[['port_name', 'port_LA', 'port_LO']] = df['port'].str.split(',', expand=True)
                 df.drop(columns='port', inplace=True)
+                
+                # Reset index to make sure RECPTN_DT is included in the SEQ_PROPERTIES
+                df.reset_index(inplace=True)
+                df.rename(columns={'index': 'RECPTN_DT'}, inplace=True)
+                
                 sequence_properties = df.applymap(convert_types).to_dict(orient='records')
                 ship_info['SEQUENCES'].append({
                     "SEQUENCE_ID": sequence_id,
@@ -58,4 +64,4 @@ output_path = os.path.splitext(sys.argv[1])[0] + '_edit.json'
 with open(output_path, 'w', encoding='utf-8') as json_file:
     json.dump(json_result, json_file, ensure_ascii=False, indent=4)
 
-print(f'File successfully written to {output_path}')
+print(f'JSON: File successfully written to {output_path}')

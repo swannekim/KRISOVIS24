@@ -30,11 +30,12 @@ for ship in json_data:
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [prop['port_LO'], prop['port_LA']]
+                    "coordinates": [float(prop['port_LO']), float(prop['port_LA'])]
                 },
                 "properties": {
                     "SHIP_ID": ship_id,
                     "SEQUENCE_ID": sequence['SEQUENCE_ID'],
+                    "RECPTN_DT": prop['RECPTN_DT'],
                     **{key: value for key, value in prop.items() if key not in ['port_LA', 'port_LO']}
                 }
             }
@@ -42,7 +43,7 @@ for ship in json_data:
 
 # Save the GeoJSON data to a new file
 output_path = os.path.splitext(sys.argv[1])[0] + '.geojson'
-with open(output_path, 'w') as file:
+with open(output_path, 'w', encoding='utf-8') as file:
     json.dump(geojson, file, ensure_ascii=False, indent=4)
 
-print(f'GeoJSON data has been written to {output_path}')
+print(f'GeoJSON: File has been written to {output_path}')
