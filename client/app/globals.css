@@ -1,11 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "~leaflet/dist/leaflet.css";
 
-
-/*
-//_____Later Customize Style_____//
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -35,4 +31,3 @@ body {
     text-wrap: balance;
   }
 }
-*/
