@@ -9,9 +9,11 @@ const HomePage = () => {
 
   return (
     <div className="relative min-h-screen">
-      <div className="absolute top-0 left-0 m-4 glass p-5 rounded-xl shadow-lg backdrop-blur-md bg-opacity-30">
-        <h1 className="text-2xl font-bold">KRISO Visualization Demo</h1>
-      </div>
+      <header className="w-full p-5 shadow-lg glass rounded-xl backdrop-blur-md bg-opacity-30 mb-4">
+        <div className="container mx-auto">
+          <h1 className="text-2xl font-bold">KRISO Visualization Demo</h1>
+        </div>
+      </header>
       <div className="flex flex-col items-center justify-center min-h-screen">
         <TestComp />
       </div>
