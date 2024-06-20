@@ -102,9 +102,5 @@ def predict_length_mapping(geojson_data, output_filename):
 
     print(f"Transformed GeoJSON data with LEN_PRED saved successfully to {output_geojson_path}")
 
-# Load the GeoJSON data
-with open('path_to_your_geojson_file.json', 'r') as f:
-    myjsonfile2 = json.load(f)
-
 # Run the function with progress logging
 predict_length_mapping(myjsonfile2, 'passenger_resample10T_ver03')
