@@ -1,8 +1,10 @@
 ## GeoJSON file
 
 - data location: ~/KRISO_VIS/KRISOVIS24/server/testdata/
-  - data copied to public folder with following command: cp ~/KRISO_VIS/KRISOVIS24/server/testdata/passenger_resample10T_ver03.geojson /data1/2024_KRISO/yykim/data_ais/
-
+  - data copied to public folder with following command:
+  ```
+  cp ~/KRISO_VIS/KRISOVIS24/server/testdata/passenger_resample10T_ver03.geojson /data1/2024_KRISO/yykim/data_ais/
+  ```
 
 - example shape:
 

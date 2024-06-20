@@ -24,7 +24,7 @@ git add .
 git commit -m "Your commit message"
 ```
 
-6. Push Changes to GitHub
+6. Push Changes to GitHubs
 ```
 git push origin main
 ```
