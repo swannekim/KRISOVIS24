@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -19,13 +19,17 @@ const TestComp = () => {
     const [shipIds, setShipIds] = useState<string[]>([]);
     const [calculationResult, setCalculationResult] = useState(null);
     const [geojsonData, setGeojsonData] = useState<any>(null);
+    const [encounterType, setEncounterType] = useState('');
+
+    // Ref to prevent initial fetch on mount
+    const initialRender = useRef(true);
 
     // Update ship IDs based on selected ship type
     useEffect(() => {
         const fetchShipIds = async () => {
             if (shipType) {
                 try {
-                    const response = await axios.get('http://127.0.0.1:8080/ship_ids', { params: { shipType } });
+                    const response = await axios.get('http://127.0.0.1:8080/get_ship_ids', { params: { shipType } });
                     console.log("Ship IDs fetched:", response.data);  // Debugging print
                     setShipIds(response.data);
                 } catch (error) {
@@ -35,7 +39,11 @@ const TestComp = () => {
                 setShipIds([]);
             }
         };
-        fetchShipIds();
+        if (initialRender.current) {
+            initialRender.current = false;
+        } else {
+            fetchShipIds();
+        }
     }, [shipType]);
 
     const handleTimeLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,14 +56,29 @@ const TestComp = () => {
     };
 
     const handleDisplay = async () => {
+        if (!dateTime) {
+            console.error("No datetime selected.");
+            return;
+        }
+
+        // Convert local datetime to UTC before sending it to the backend
+        const utcDateTime = new Date(dateTime.getTime() - (dateTime.getTimezoneOffset() * 60000)).toISOString();
+
         try {
-            const response = await axios.get('http://127.0.0.1:8080/geojson_loaded', { params: { shipType } });
-            console.log("GeoJSON data fetched:", response.data);  // Debugging print
+            const response = await axios.get('http://127.0.0.1:8080/load_geojson_data_selected', { 
+                params: { 
+                    shipType, 
+                    datetime: utcDateTime 
+                } 
+            });
+            console.log("fetching GeoJSON data");
+            
             if (response.data) {
                 setGeojsonData(response.data);  // Set the fetched GeoJSON data to state
-                console.log("Set geojsonData state:", JSON.stringify(response.data, null, 2));  // Detailed log
+                console.log("GeoJSON data set:");
+                console.log(response.data);
             } else {
-                console.log("No data received from backend.");  // Log if no data received
+                console.log("No data received from backend.");
             }
         } catch (error) {
             console.error("Error fetching GeoJSON data:", error);
@@ -64,7 +87,7 @@ const TestComp = () => {
 
     const handleCalculate = async () => {
         try {
-            const response = await axios.post('http://127.0.0.1:8080/calculate', {
+            const response = await axios.post('http://127.0.0.1:8080/os_domain', {
                 shipType,
                 shipId,
                 dateTime,
@@ -95,7 +118,7 @@ const TestComp = () => {
                     showTimeSelect
                     timeFormat="HH:mm"
                     timeIntervals={10}
-                    dateFormat="MMMM d, yyyy h:mm aa"
+                    dateFormat="yyyy-MM-dd'T'HH:mm:ss"
                     className="input input-bordered input-secondary w-full"
                     placeholderText="Select Date and Time"
                 />
@@ -104,7 +127,7 @@ const TestComp = () => {
         
                 <select className="select select-bordered select-secondary w-full" value={shipId} onChange={(e) => setShipId(e.target.value)}>
                     <option disabled value="">Select Ship ID</option>
-                    {shipIds.map((id) => (
+                    {shipIds && shipIds.map((id) => (
                         <option key={id} value={id}>{id}</option>
                     ))}
                 </select>
@@ -112,10 +135,17 @@ const TestComp = () => {
                 <input
                     type="number" 
                     className="input input-bordered input-secondary w-full"
-                    placeholder="Time Length (minutes)"
+                    placeholder="Time Length (unit: 10 min)"
                     value={timeLength}
                     onChange={handleTimeLengthChange}
                 />
+
+                <select className="select select-bordered select-secondary w-full" value={encounterType} onChange={(e) => setEncounterType(e.target.value)}>
+                    <option disabled value="">Select Encounter Type</option>
+                    <option value="overtaking">Overtaking</option>
+                    <option value="ho_crossing">Head-on & Crossing</option>
+                    {/* Add more ship types as needed */}
+                </select>
 
                 <button className="btn btn-primary mt-4" onClick={handleCalculate}>Check Ships Nearby</button>
             </div>

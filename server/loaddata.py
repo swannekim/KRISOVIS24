@@ -2,6 +2,7 @@
 
 import json
 
+# load_geojson('passenger_resample10T_ver03')
 def load_geojson(filename):
     geojson_data_path = './testdata/' + filename + '.geojson'
     try:
