@@ -75,58 +75,81 @@ def create_ellipse(center, semi_major, semi_minor, angle):
     return ellipse
 
 # Function to calculate ships around an input ship using Coldwell model
-def ownship_domain(geojson_data, ship_id, recptn_dt_str, time_length=10, encounter_type='ho_crossing'):
-    # Parse the input datetime
-    recptn_dt = datetime.fromisoformat(recptn_dt_str)
-    end_time = recptn_dt + timedelta(minutes=time_length)
-    
-    # Filter the features within the time window
-    time_window_features = [
-        feature for feature in geojson_data['features']
-        if feature['properties']['SHIP_ID'] == ship_id
-        and recptn_dt <= datetime.fromisoformat(feature['properties']['RECPTN_DT']) <= end_time
-    ]
-    
-    if not time_window_features:
-        return {"error": f"No data found for Ship ID {ship_id} within the time window {recptn_dt} to {end_time}."}
+def ownship_domain(filename, ship_id, recptn_dt_str, time_length=30, encounter_type='ho_crossing'):
+    geojson_data_path = './testdata/' + filename + '.geojson'
+    try:
+        with open(geojson_data_path, 'r') as file:
+            geojson_data = json.load(file)
+        print("GeoJSON file loaded!")
 
-    # Define Coldwell model dimensions
-    semi_major_factor = 5 if encounter_type != 'overtaking' else 6
-    semi_minor_factor = 2.5 if encounter_type != 'overtaking' else 1.75
-    shift_x_factor = 0.75 if encounter_type != 'overtaking' else 0
-    shift_y_factor = 1.1 if encounter_type != 'overtaking' else 0
+        # Remove 'Z' if it exists to match the format in your GeoJSON data
+        if recptn_dt_str.endswith('Z'):
+            recptn_dt_str = recptn_dt_str[:-5]
+        # Parse the input datetime
+        recptn_dt = datetime.fromisoformat(recptn_dt_str)
+        end_time = recptn_dt + timedelta(minutes=time_length)
+        print("time window: ", recptn_dt, " ~ ", end_time)
+        
+        # Filter the features within the time window
+        time_window_features = [
+            feature for feature in geojson_data['features']
+            if feature['properties']['SHIP_ID'] == ship_id
+            and recptn_dt <= datetime.fromisoformat(feature['properties']['RECPTN_DT']) <= end_time
+        ]
+        print(f"Filtered features count: {len(time_window_features)}")
 
-    features = []
-    
-    for feature in time_window_features:
-        ship_position = Point(feature['geometry']['coordinates'])
-        cog = feature['properties']['COG']
-        ship_length_meters = feature['properties']['LEN_PRED']
-        
-        # Convert ship length from meters to degrees
-        ship_length_degrees = ship_length_meters * METER_TO_DEGREE
-        
-        # Calculate dimensions
-        semi_major = semi_major_factor * ship_length_degrees
-        semi_minor = semi_minor_factor * ship_length_degrees
-        shift_x = shift_x_factor * ship_length_degrees
-        shift_y = shift_y_factor * ship_length_degrees
-        
-        # Create the elliptical domain
-        domain_center = Point(ship_position.x - shift_x, ship_position.y - shift_y)
-        ellipse = create_ellipse(domain_center, semi_major, semi_minor, cog)
-        
-        # Create the vessel triangle
-        # triangle = create_triangle(ship_position, ship_length_meters, cog)
-        
-        # Add features to the collection
-        features.append(ellipse)
-        #features.append(triangle)
-    
-    # Create GeoJSON output
-    output = {
-        "type": "FeatureCollection",
-        "features": features
-    }
+        if not time_window_features:
+            return {"error": f"No data found for Ship ID {ship_id} within the time window {recptn_dt} to {end_time}."}
 
-    return output
+        # Define Coldwell model dimensions
+        semi_major_factor = 5 if encounter_type != 'overtaking' else 6
+        semi_minor_factor = 2.5 if encounter_type != 'overtaking' else 1.75
+        shift_x_factor = 0.75 if encounter_type != 'overtaking' else 0
+        shift_y_factor = 1.1 if encounter_type != 'overtaking' else 0
+
+        features = []
+        
+        for feature in time_window_features:
+            ship_position = Point(feature['geometry']['coordinates'])
+            cog = feature['properties']['COG']
+            ship_length_meters = feature['properties']['LEN_PRED']
+            
+            # Convert ship length from meters to degrees
+            ship_length_degrees = ship_length_meters * METER_TO_DEGREE
+            
+            # Calculate dimensions
+            semi_major = semi_major_factor * ship_length_degrees
+            semi_minor = semi_minor_factor * ship_length_degrees
+            shift_x = shift_x_factor * ship_length_degrees
+            shift_y = shift_y_factor * ship_length_degrees
+            
+            # Create the elliptical domain
+            domain_center = Point(ship_position.x - shift_x, ship_position.y - shift_y)
+            ellipse = create_ellipse(domain_center, semi_major, semi_minor, cog)
+            
+            # Create the vessel triangle
+            # triangle = create_triangle(ship_position, ship_length_meters, cog)
+            
+            # Add features to the collection
+            features.append(ellipse)
+            #features.append(triangle)
+
+            features.append({
+                "type": "Feature",
+                "geometry": mapping(ship_position),
+                "properties": {
+                    "SHIP_ID": ship_id,
+                    "COG": cog
+                }
+            })
+        
+        # Create GeoJSON output
+        output = {
+            "type": "FeatureCollection",
+            "features": features
+        }
+
+        return output
+
+    except Exception as e:
+        raise ValueError(f"An error occurred while loading the GeoJSON data: {e}")

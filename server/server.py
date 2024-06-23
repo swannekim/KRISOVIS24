@@ -48,7 +48,6 @@ def load_geojson_data():
         print(f"Loading file: {file_name}")
         result = load_geojson_selected(file_name, datetime_str)
         print(f"Getting ship ids Success!")
-        # return jsonify(result)
         return make_response(json.dumps(result, indent=2), 200, {'Content-Type': 'application/json'})
     
     except ValueError as e:
@@ -109,17 +108,17 @@ def os_domain():
         print("Received data:", data)  # Debugging print
 
         ship_type = data.get('shipType')
+        file_name = file_mapping.get(ship_type)
         ship_id = data.get('shipId')
-        date_time = pd.to_datetime(data.get('dateTime'))
+        date_time = data.get('datetime')
         time_length = int(data.get('timeLength', 30))
         encounter_type = data.get('encounterType')
+        print(file_name, ship_id, date_time, time_length, encounter_type)
         
-        geojson_filename = f"{ship_type}_resample10T_ver03"
-        geojson_data = load_geojson(geojson_filename)
-        
-        result = ownship_domain(geojson_data, ship_id, date_time, time_length, encounter_type)
-        return jsonify(result)
+        result = ownship_domain(file_name, ship_id, date_time, time_length, encounter_type)
+        return make_response(json.dumps(result, indent=2), 200, {'Content-Type': 'application/json'})
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 400
 
 

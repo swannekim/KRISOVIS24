@@ -86,15 +86,24 @@ const TestComp = () => {
     };
 
     const handleCalculate = async () => {
+        if (!dateTime) {
+            console.error("No datetime selected.");
+            return;
+        }
+
+        // Convert local datetime to UTC before sending it to the backend
+        const utcDateTime = new Date(dateTime.getTime() - (dateTime.getTimezoneOffset() * 60000)).toISOString();
+
         try {
             const response = await axios.post('http://127.0.0.1:8080/os_domain', {
                 shipType,
                 shipId,
-                dateTime,
+                datetime: utcDateTime,
                 timeLength,
+                encounterType,
             });
-            console.log("Calculation result:", response.data);  // Debugging print
-            setCalculationResult(response.data);
+            console.log("Calculation result:", response.data);
+            setGeojsonData(response.data);
         } catch (error) {
             console.error("Error calculating ships around:", error);
         }
@@ -144,7 +153,6 @@ const TestComp = () => {
                     <option disabled value="">Select Encounter Type</option>
                     <option value="overtaking">Overtaking</option>
                     <option value="ho_crossing">Head-on & Crossing</option>
-                    {/* Add more ship types as needed */}
                 </select>
 
                 <button className="btn btn-primary mt-4" onClick={handleCalculate}>Check Ships Nearby</button>
